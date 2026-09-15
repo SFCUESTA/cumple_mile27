@@ -380,18 +380,18 @@
       <img id="avatar-img" src="images/central_avatar.png" alt="MILE (1000e)" class="w-full h-auto">
     </div>
 
-    <h1 class="font-title text-5xl md:text-7xl text-white tracking-wide mb-1 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+    <h1 id="titulo-hero" class="font-title text-5xl md:text-7xl text-center text-white tracking-wide mb-1 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
       ¡LA MILE CUMPLE 27! 🎂
     </h1>
 
     <p class="font-handwrite text-3xl md:text-4xl text-teal-300 tracking-wider mb-4 font-bold rotate-[-2deg]">
-      ✨ 1000e Special Edition ✨
+      <span id="frases-rot">✨ 1000e Special Edition ✨</span>
     </p>
 
-    <p
+   <!-- <p
       class="font-fredoka text-lg md:text-2xl text-purple-200 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-2 rounded-full shadow-lg">
       Arrastra a Mile, los gatos y las flores 🌸
-    </p>
+    </p>-->
 
     <div class="absolute bottom-8 animate-bounce">
       <i class="fa-solid fa-chevron-down text-3xl text-teal-300"></i>
@@ -438,7 +438,7 @@
         <img src="images/Horizontal 2.jpg" alt=""
           class="flower-clip absolute top-8 left-8 w-44 md:w-56 opacity-90 shadow-2xl">
         <div class="max-w-3xl text-center space-y-8 relative z-10">
-          <h3
+          <h3 id="no-faltes"
             class="font-title text-6xl md:text-9xl text-pink-500 tracking-wider drop-shadow-[0_10px_20px_rgba(236,72,153,0.3)]">
             ¡NO FALTES! 🔥
           </h3>
@@ -446,7 +446,7 @@
             Queremos celebrar este día genial con las mejores personas, risas y buenos momentos.
           </p>
           <p class="font-fredoka text-2xl md:text-3xl text-teal-300 underline decoration-pink-500 decoration-wavy">
-            <span id="guest-name-2">Tú</span> eres parte fundamental de la fiesta ✨
+           y no puede faltar: <span id="guest-name-2">Tú</span> ✨
           </p>
         </div>
         <span class="absolute top-20 right-20 text-8xl opacity-30 z-10">🎂</span>
@@ -607,14 +607,14 @@
         <p class="font-handwrite text-xl md:text-2xl text-purple-700">📅 Sábado 26 de Septiembre</p>
 
         <div class="font-body text-slate-800 text-lg space-y-2">
-          <p class="font-fredoka text-3xl text-purple-700"><i class="fa-solid fa-utensils mr-2"></i>Crepes & Waffles</p>
-          <p class="text-xl font-bold text-teal-800">Mall El Jardín</p>
-          <p class="font-handwrite text-2xl text-purple-900/80">(Av. Amazonas N16-114 y Av. República)</p>
+          <p class="font-fredoka text-3xl text-purple-700">🍔🍟Chio's Burger Portugal</p>
+          <p class="text-xl font-bold text-teal-800">Portugal y Av. República de El Salvador</p>
+<!--          <p class="font-handwrite text-2xl text-purple-900/80">(Portugal y Av. República de El Salvador)</p>-->
         </div>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
-        <a href="https://www.google.com/maps/search/?api=1&query=Crepes+and+Waffles+Mall+El+Jardin+Quito"
+        <a href="https://maps.app.goo.gl/G96D6ZfabkW8ZMGP6"
           target="_blank"
           class="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-teal-400 text-teal-300 font-righteous text-lg rounded-2xl transition duration-300 flex items-center justify-center gap-2 shadow-lg">
           <i class="fa-solid fa-map-location-dot text-xl"></i> Ver en Google Maps
@@ -686,7 +686,7 @@
 
     // 3. SCROLL HORIZONTAL CON GSAP
     const horizontalContainer = document.getElementById('horizontal-container');
-    gsap.to(horizontalContainer, {
+    const horizTween = gsap.to(horizontalContainer, {
       xPercent: -66.666,
       ease: "none",
       scrollTrigger: {
@@ -739,15 +739,101 @@
       duration: 2500
     });
 
-    // 6. Revelado suave de elementos al hacer scroll
-    gsap.utils.toArray('.gsap-reveal').forEach(el => {
-      gsap.from(el, {
-        scrollTrigger: { trigger: el, start: "top 80%" },
-        y: 60,
+    // 6. Animaciones de entrada/salida para TODOS los textos (GSAP + ScrollTrigger)
+    // ponytail: solo opacity/transform para no tocar el diseño; sube offsets/duraciones si quieres más drama
+    const skip = el =>
+      el.closest('.draggable-sticker') ||
+      el.closest('.animate-bounce, .animate-pulse') ||
+      el.offsetParent === null;
+
+    const texts = gsap.utils.toArray('h1, h2, h3, p, a, .inline-block')
+      .filter(el => !skip(el) && el.id !== 'titulo-hero');
+
+    texts.forEach(el => {
+      const horiz = horizontalContainer.contains(el);
+      const sibs = [...el.parentElement.children].filter(c => texts.includes(c));
+      const delay = Math.min(sibs.indexOf(el) * 0.08, 0.4);
+      const show = () => gsap.to(el, { opacity: 1, x: 0, y: 0, duration: 0.8, delay, ease: 'power3.out', overwrite: 'auto' });
+      const hide = dir => gsap.to(el, {
         opacity: 0,
-        duration: 1.2,
-        ease: "power3.out"
+        x: horiz ? dir * 60 : 0,
+        y: horiz ? 0 : dir * 40,
+        duration: 0.5, ease: 'power2.in', overwrite: 'auto'
       });
+
+      gsap.set(el, { opacity: 0, x: horiz ? 60 : 0, y: horiz ? 0 : 40 });
+
+      const cfg = horiz
+        ? { trigger: el, containerAnimation: horizTween, start: 'left 85%', end: 'right 15%' }
+        : { trigger: el, start: 'top 88%', end: 'bottom 12%' };
+
+      ScrollTrigger.create({
+        ...cfg,
+        onEnter: show, onEnterBack: show,
+        onLeave: () => hide(-1), onLeaveBack: () => hide(1)
+      });
+    });
+
+    // 7. Título hero: entrada/salida letra por letra (mismas fuentes, solo spans hijos)
+    const h1Hero = document.getElementById('titulo-hero');
+    const heroChars = [];
+    // ponytail: cada palabra va en un span nowrap para que la línea corte entre palabras, nunca dentro de una
+    h1Hero.textContent.split(' ').forEach((word, wi, arr) => {
+      const w = document.createElement('span');
+      w.style.display = 'inline-block';
+      w.style.whiteSpace = 'nowrap';
+      Array.from(word).forEach(ch => {
+        const s = document.createElement('span');
+        s.textContent = ch;
+        s.style.display = 'inline-block';
+        s.style.whiteSpace = 'pre';
+        w.appendChild(s);
+        heroChars.push(s);
+      });
+      h1Hero.appendChild(w);
+      if (wi < arr.length - 1) {
+        const sp = document.createElement('span');
+        sp.textContent = ' ';
+        sp.style.whiteSpace = 'pre';
+        h1Hero.appendChild(sp);
+      }
+    });
+    h1Hero.firstChild.remove(); // quita el nodo de texto original
+
+    gsap.set(heroChars, { opacity: 0, y: 30, scale: 0.5, rotation: () => gsap.utils.random(-25, 25) });
+    const enterChars = () => gsap.to(heroChars, {
+      opacity: 1, y: 0, scale: 1, rotation: 0,
+      duration: 0.6, stagger: 0.05, ease: 'back.out(2)', overwrite: 'auto'
+    });
+    const exitChars = dir => gsap.to(heroChars, {
+      opacity: 0, y: dir * 40, scale: 0.6,
+      duration: 0.4, stagger: 0.02, ease: 'power2.in', overwrite: 'auto'
+    });
+    ScrollTrigger.create({
+      trigger: '#sec-hero', start: 'top 90%', end: 'bottom 10%',
+      onEnter: enterChars, onEnterBack: enterChars,
+      onLeave: () => exitChars(-1), onLeaveBack: () => exitChars(1)
+    });
+
+    // 8. Rotador de frases: cambia el texto del subtítulo cada 3.2s (mismo elemento, misma fuente)
+    const frases = ['✨ 1000e Special Edition ✨', '🎂 27 años de pura magia', '🎊 ¡Upsiiiis!'];
+    const frasesEl = document.getElementById('frases-rot');
+    let fi = 0;
+    setInterval(() => {
+      gsap.to(frasesEl, {
+        opacity: 0, y: -14, duration: 0.35, ease: 'power2.in',
+        onComplete() {
+          fi = (fi + 1) % frases.length;
+          frasesEl.textContent = frases[fi];
+          gsap.fromTo(frasesEl, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+        }
+      });
+    }, 3200);
+
+    // 9. Latido continuo del título ¡NO FALTES!
+    gsap.to('#no-faltes', {
+      scale: 1.06, duration: 1, repeat: -1, yoyo: true,
+      ease: 'sine.inOut', transformOrigin: 'center'
     });
   </script>
 </body>

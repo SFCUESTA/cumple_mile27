@@ -290,6 +290,13 @@
       animation: mesh-drift 16s ease-in-out infinite;
     }
 
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: -5; /* encima del fondo fijo (-z-10), debajo de textos, containers y fotos */
+      will-change: transform;
+    }
+
     /* Pétalos cayendo */
     @keyframes petal-fall {
       0% {
@@ -328,21 +335,7 @@
     <div class="noise-overlay absolute inset-0 pointer-events-none"></div>
   </div>
 
-  <!-- Stickers Arrastrables (GSAP Draggable) -->
-  <div
-    class="draggable-sticker fixed top-12 left-6 z-40 cursor-grab active:cursor-grabbing w-24 md:w-32 drop-shadow-2xl">
-    <img src="images/Dancing Cat GIF.gif" alt="Gato Bailando" class="w-full rounded-2xl">
-  </div>
-
-  <div
-    class="draggable-sticker fixed top-28 right-8 z-40 cursor-grab active:cursor-grabbing w-20 md:w-28 drop-shadow-2xl">
-    <img src="images/Sunflower GIF.gif" alt="Flor" class="w-full rounded-2xl">
-  </div>
-
-  <div
-    class="draggable-sticker fixed bottom-12 left-4 z-40 cursor-grab active:cursor-grabbing w-20 md:w-28 drop-shadow-2xl">
-    <img src="images/Cat Meme.gif" alt="Gato Meme" class="w-full rounded-2xl">
-  </div>
+  <!-- Sistema de partículas (flores flotantes generadas por JS) -->
 
   <!-- SECCIÓN 1: HERO CON EFECTO PLASMA -->
   <section id="sec-hero"
@@ -383,6 +376,10 @@
     <h1 id="titulo-hero" class="font-title text-5xl md:text-7xl text-center text-white tracking-wide mb-1 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
       ¡LA MILE CUMPLE 27! 🎂
     </h1>
+    <br/>
+    <br/>
+    <br/>
+
 
     <p class="font-handwrite text-3xl md:text-4xl text-teal-300 tracking-wider mb-4 font-bold rotate-[-2deg]">
       <span id="frases-rot">✨ 1000e Special Edition ✨</span>
@@ -705,27 +702,31 @@
       ease: 'none'
     });
 
-    // 4. Drift aleatorio sutil en stickers (pausa durante el drag)
-    document.querySelectorAll('.draggable-sticker').forEach((el, i) => {
-      el._drift = gsap.to(el, {
-        x: `+=${gsap.utils.random(-18, 18)}`,
-        y: `+=${gsap.utils.random(-18, 18)}`,
-        rotation: `+=${gsap.utils.random(-6, 6)}`,
-        duration: gsap.utils.random(2.5, 4.5),
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-        delay: i * 0.4
-      });
-    });
+    // 4. Sistema de partículas: flores flotando con deriva y rotación continua
+    const particleImgs = ['images/sunflower.webp', 'images/flower.png'];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('img');
+      p.src = particleImgs[i % particleImgs.length];
+      p.alt = '';
+      p.className = 'particle';
+      p.style.width = gsap.utils.random(26, 64) + 'px';
+      p.style.left = gsap.utils.random(0, 96) + '%';
+      p.style.top = gsap.utils.random(0, 96) + '%';
+      p.style.opacity = gsap.utils.random(0.45, 0.85);
+      document.body.appendChild(p);
 
-    // 5. Arrastre de Elementos con GSAP
-    Draggable.create(".draggable-sticker", {
-      bounds: window,
-      inertia: true,
-      onPress() { this.target._drift?.pause(); },
-      onRelease() { this.target._drift?.resume(); }
-    });
+      // ponytail: deriva yoyo infinita por partícula; si saturas la pantalla, baja a 14
+      gsap.to(p, {
+        x: `+=${gsap.utils.random(-70, 70)}`,
+        y: `+=${gsap.utils.random(-90, 90)}`,
+        rotation: `+=${gsap.utils.random(-220, 220)}`,
+        duration: gsap.utils.random(6, 14),
+        repeat: -1, yoyo: true, ease: 'sine.inOut',
+        delay: gsap.utils.random(0, 5)
+      });
+    }
+
+    // 5. Arrastre del Avatar Central con GSAP
     Draggable.create("#central-avatar", { bounds: window, inertia: true });
 
     // 5. Animación Flotante del Avatar con Anime.js
@@ -742,7 +743,7 @@
     // 6. Animaciones de entrada/salida para TODOS los textos (GSAP + ScrollTrigger)
     // ponytail: solo opacity/transform para no tocar el diseño; sube offsets/duraciones si quieres más drama
     const skip = el =>
-      el.closest('.draggable-sticker') ||
+      el.closest('.particle') ||
       el.closest('.animate-bounce, .animate-pulse') ||
       el.offsetParent === null;
 
@@ -778,7 +779,7 @@
     const h1Hero = document.getElementById('titulo-hero');
     const heroChars = [];
     // ponytail: cada palabra va en un span nowrap para que la línea corte entre palabras, nunca dentro de una
-    h1Hero.textContent.split(' ').forEach((word, wi, arr) => {
+    h1Hero.textContent.replace(/\s+/g, ' ').trim().split(' ').forEach((word, wi, arr) => {
       const w = document.createElement('span');
       w.style.display = 'inline-block';
       w.style.whiteSpace = 'nowrap';
@@ -813,6 +814,24 @@
       trigger: '#sec-hero', start: 'top 90%', end: 'bottom 10%',
       onEnter: enterChars, onEnterBack: enterChars,
       onLeave: () => exitChars(-1), onLeaveBack: () => exitChars(1)
+    });
+
+    // 7b. Cada letra cambia de fuente y salta con flash de color (desincronizado, tipo ola)
+    const fontsHero = ['Shrikhand', 'DynaPuff', 'Creepster', 'Caveat', 'Righteous', 'Fredoka', 'Outfit'];
+    const coloresHero = ['#5eead4', '#fde047', '#f472b6', '#c4b5fd'];
+    heroChars.forEach(s => {
+      if (!s.textContent.trim()) return;
+      const loop = () => {
+        s.style.fontFamily = `'${fontsHero[Math.floor(Math.random() * fontsHero.length)]}', cursive`;
+        gsap.fromTo(s, {
+          scale: 1.3,
+          color: coloresHero[Math.floor(Math.random() * coloresHero.length)]
+        }, {
+          scale: 1, color: '#ffffff', duration: 0.5, ease: 'back.out(3)',
+          onComplete: () => setTimeout(loop, 900 + Math.random() * 1500)
+        });
+      };
+      setTimeout(loop, Math.random() * 2000);
     });
 
     // 8. Rotador de frases: cambia el texto del subtítulo cada 3.2s (mismo elemento, misma fuente)

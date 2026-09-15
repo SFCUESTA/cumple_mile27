@@ -112,9 +112,23 @@
     }
 
     /* Textura de ruido sutil */
-    .noise-overlay {
+    .noise-overlay,
+    .noise-global {
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .noise-overlay {
       opacity: 0.04;
+    }
+
+    /* Ruido global sobre toda la página, para textura orgánica sin cambiar colores */
+    .noise-global {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+      opacity: 0.05;
+      mix-blend-mode: overlay;
     }
 
     /* Gradientes radiales animados */
@@ -374,7 +388,7 @@
     </div>
 
     <h1 id="titulo-hero" class="font-title text-5xl md:text-7xl text-center text-white tracking-wide mb-1 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
-      ¡LA MILE CUMPLE 27! 🎂
+      ¡LA MILE CUMPLE 27!
     </h1>
     <br/>
     <br/>
@@ -480,7 +494,8 @@
       <div class="insidious-fog" style="top:55%;right:5%;width:600px;height:600px;animation-delay:2s;"></div>
       <div class="insidious-fog" style="bottom:5%;left:35%;width:450px;height:450px;animation-delay:4s;"></div>
     </div>
-    <div class="max-w-3xl w-full text-center space-y-8 gsap-reveal">
+    <div
+      class="max-w-3xl w-full text-center space-y-8 gsap-reveal p-8 md:p-12 rounded-3xl bg-slate-950/80 backdrop-blur-xl border border-red-900/40 shadow-2xl">
 
       <div
         class="inline-block bg-red-900/60 border border-red-500/50 px-6 py-2 rounded-full text-red-300 font-handwrite text-2xl tracking-widest">
@@ -626,6 +641,8 @@
     </div>
   </section>
 
+  <!-- Ruido global (textura orgánica sobre todo, no interactiva) -->
+  <div class="noise-global"></div>
 
   <script>
     // 1. Plugins GSAP
